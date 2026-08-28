@@ -304,9 +304,9 @@
     return el("div", { class: "wrap" }, [
       masthead(),
       el("button", {
-        class: "btn btn-sm btn-ghost back", type: "button",
+        class: "btn btn-sm btn-ghost back", type: "button", "aria-label": "Back to games",
         onclick: function () { screen = "games"; joinCode = ""; render(); }
-      }, [document.createTextNode("← Games")]),
+      }, [document.createTextNode("←")]),
       el("div", { class: "game-tile still" }, [
         el("div", { class: "glyph", text: game.glyph }),
         el("div", { class: "meta" }, [

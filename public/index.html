@@ -474,7 +474,7 @@ input.word-input {
 .game-tile.still .glyph { background: var(--surface-2); }
 
 /* back out of a game's setup to the list */
-.back { align-self: flex-start; padding-left: 6px; margin-bottom: -6px; }
+.back { align-self: flex-start; padding: 6px 10px; margin-bottom: -6px; font-size: 18px; line-height: 1; }
 </style>
 </head>
 <body>
@@ -785,9 +785,9 @@ input.word-input {
     return el("div", { class: "wrap" }, [
       masthead(),
       el("button", {
-        class: "btn btn-sm btn-ghost back", type: "button",
+        class: "btn btn-sm btn-ghost back", type: "button", "aria-label": "Back to games",
         onclick: function () { screen = "games"; joinCode = ""; render(); }
-      }, [document.createTextNode("← Games")]),
+      }, [document.createTextNode("←")]),
       el("div", { class: "game-tile still" }, [
         el("div", { class: "glyph", text: game.glyph }),
         el("div", { class: "meta" }, [

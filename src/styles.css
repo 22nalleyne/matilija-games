@@ -466,4 +466,4 @@ input.word-input {
 .game-tile.still .glyph { background: var(--surface-2); }
 
 /* back out of a game's setup to the list */
-.back { align-self: flex-start; padding-left: 6px; margin-bottom: -6px; }
+.back { align-self: flex-start; padding: 6px 10px; margin-bottom: -6px; font-size: 18px; line-height: 1; }
