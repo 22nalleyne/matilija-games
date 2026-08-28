@@ -672,11 +672,23 @@ input.word-input {
     }
   }
 
+  // The logo is always the way home. Mid-game it asks first, because going
+  // home now means leaving, and a mis-tap would drop you out of a round.
+  function goHome() {
+    if (code && view && view.phase === "playing") {
+      if (!confirm("Leave the game?")) return;
+    }
+    if (code) { leave(); return; }
+    screen = "games";
+    joinCode = "";
+    render();
+  }
+
   function masthead() {
     return el("div", { class: "top" }, [
       el("button", {
-        class: "brand", type: "button",
-        onclick: function () { if (!code) { screen = "games"; joinCode = ""; render(); } }
+        class: "brand", type: "button", "aria-label": "Home",
+        onclick: goHome
       }, [
         poppy(), document.createTextNode("Matilija Games")
       ]),
