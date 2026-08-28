@@ -118,9 +118,19 @@ domain is attached.
 
 ### 4. Do the same for matilija.games
 
-Identical steps. Add `matilija.games` and `www.matilija.games` as custom domains
-on the same Worker — the Worker itself 301s them to matilijagames.com, so
-there's no redirect rule to configure in the dashboard.
+Identical steps, and add `matilija.games` and `www.matilija.games` as custom
+domains on the same Worker.
+
+Then send it to the canonical name with a **Redirect Rule** on the
+matilija.games zone: **Rules → Redirect Rules → Create rule**, applied to all
+incoming requests, dynamic redirect to
+`concat("https://matilijagames.com", http.request.uri.path)`, status **301**,
+preserve query string.
+
+It has to be a zone rule rather than code in the Worker: Cloudflare answers a
+request for `/` from the static asset before the Worker ever runs, so a
+redirect written in `worker/index.js` would never fire for the pages people
+actually visit.
 
 ### 5. Play
 

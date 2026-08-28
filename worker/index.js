@@ -454,11 +454,14 @@ function validCode(code) {
   return /^[A-Z]{4}$/.test(String(code || "").toUpperCase());
 }
 
-// One canonical home. matilija.games and any www. spelling bounce to it, so
-// a room link opens the same room whichever address someone typed. The
-// fragment (#CODE) is preserved by the browser across a redirect.
-const CANONICAL = "matilijagames.com";
-const ALIASES = ["matilija.games", "www.matilija.games", "www.matilijagames.com"];
+/*
+   NOTE: matilija.games -> matilijagames.com is NOT done here. Cloudflare
+   serves a matching static asset before this Worker runs, so a request for
+   "/" is answered by public/index.html and never reaches this code. Only
+   paths with no matching file (i.e. /api/*) get here. The redirect lives as
+   a Redirect Rule on the matilija.games zone instead, which also covers
+   plain http.
+*/
 
 export default {
   async fetch(request, env) {
