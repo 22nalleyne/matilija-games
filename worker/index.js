@@ -414,17 +414,38 @@ export class Room {
     }
   }
 
-  async webSocketClose(ws) {
+  // Closing the tab leaves the game. Anyone who comes back with the same
+  // link simply joins again, so this is cheap to undo — and it keeps the
+  // player list honest about who is actually there.
+  removePlayer(pid) {
+    if (!pid || !this.room.players[pid]) return;
+    delete this.room.players[pid];
+
+    if (this.room.hostId === pid) {
+      const rest = Object.keys(this.room.players);
+      this.room.hostId = rest.length ? rest[0] : null;
+    }
+
+    for (const team of this.room.teams) {
+      const at = team.members.indexOf(pid);
+      if (at >= 0) team.members.splice(at, 1);
+      delete team.submissions[pid];
+      // Losing a player can complete the round for everyone left.
+      if (this.room.phase === "playing" && !team.revealed && !team.won) this.maybeReveal(team);
+    }
+  }
+
+  async dropped(ws) {
     await this.load();
-    // The seat is kept: a dropped phone can rejoin mid-round and its
-    // team is not held hostage by a player who is no longer there.
+    if (!this.room) return;
+    const att = ws.deserializeAttachment() || {};
+    this.removePlayer(att.playerId);
+    await this.save();
     this.broadcast();
   }
 
-  async webSocketError(ws) {
-    await this.load();
-    this.broadcast();
-  }
+  async webSocketClose(ws) { await this.dropped(ws); }
+  async webSocketError(ws) { await this.dropped(ws); }
 }
 
 /* ---------------- the Worker ---------------- */

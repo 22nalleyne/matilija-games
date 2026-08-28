@@ -31,9 +31,11 @@ wins over the algorithm.
 team has got and how many of them have submitted, but never their words — until
 the game ends, when everything opens up. First team to converge wins it.
 
-**Dropouts.** A round reveals when everyone *connected* has submitted, so a
-phone that dies or a person who wanders off doesn't freeze the game. They keep
-their seat and can rejoin from the same link.
+**Leaving.** Closing the tab takes you out of the game — you disappear from the
+player list, and if the others had already submitted, the round reveals without
+you. Rejoining is just opening the link again. A round otherwise reveals when
+everyone still present has submitted, so nobody can freeze the game by walking
+off with their phone.
 
 ## How it's built
 
