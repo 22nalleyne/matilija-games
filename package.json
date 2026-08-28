@@ -1,0 +1,13 @@
+{
+  "name": "matilija-games",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Family games for whoever is in the room.",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^4"
+  }
+}

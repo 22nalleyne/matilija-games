@@ -1,0 +1,25 @@
+{
+  // Matilija Games — https://developers.cloudflare.com/workers/wrangler/configuration/
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "matilija-games",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-08-28",
+
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+
+  // One Room object per game code. SQLite-backed, which is the flavour
+  // available on the free plan.
+  "durable_objects": {
+    "bindings": [
+      { "name": "ROOMS", "class_name": "Room" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["Room"] }
+  ],
+
+  "observability": { "enabled": true }
+}
