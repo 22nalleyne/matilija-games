@@ -460,6 +460,10 @@ input.word-input {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
+
+/* the same tile, shown as a heading rather than a choice */
+.game-tile.still { cursor: default; }
+.game-tile.still:hover { border-color: var(--rule); transform: none; }
 </style>
 </head>
 <body>
@@ -491,6 +495,7 @@ input.word-input {
   var retry = 0;
   var retryTimer = null;
   var joinCode = "";
+  var screen = "games";   // games | setup
 
   var me = {
     id: store(LS_ID) || makeId(),
@@ -605,7 +610,7 @@ input.word-input {
         var before = view;
         view = msg;
         // A fresh round arriving means the box should be empty and ready.
-        if (before && roundChanged(before, msg)) draft = "";
+        if (roundKey(before) !== roundKey(msg)) draft = "";
         render();
       } else if (msg.t === "error") {
         toast(msg.message, true);
@@ -624,10 +629,14 @@ input.word-input {
     sock.onerror = function () { /* onclose handles it */ };
   }
 
-  function roundChanged(a, b) {
-    var ta = myTeam(a), tb = myTeam(b);
-    if (!ta || !tb) return false;
-    return ta.round !== tb.round || (ta.revealed && !tb.revealed);
+  // Identifies "the box you are typing into right now". When this changes —
+  // new round, new game, back to the lobby — whatever was half-typed is stale.
+  // Other players submitting does not change it, so nobody loses what they
+  // were writing.
+  function roundKey(v) {
+    if (!v) return "none";
+    var t = myTeam(v);
+    return v.phase + "|" + (t ? t.round + "|" + t.revealed : "-");
   }
 
   function send(obj) {
@@ -636,7 +645,7 @@ input.word-input {
 
   function leave() {
     if (ws) { try { ws.onclose = null; ws.close(); } catch (e) {} }
-    ws = null; view = null; code = null; status = "idle"; draft = "";
+    ws = null; view = null; code = null; status = "idle"; draft = ""; screen = "games";
     clearTimeout(retryTimer);
     location.hash = "";
     render();
@@ -663,9 +672,12 @@ input.word-input {
     }
   }
 
-  function masthead(onBrand) {
+  function masthead() {
     return el("div", { class: "top" }, [
-      el("button", { class: "brand", type: "button", onclick: onBrand || function () {} }, [
+      el("button", {
+        class: "brand", type: "button",
+        onclick: function () { if (!code) { screen = "games"; joinCode = ""; render(); } }
+      }, [
         poppy(), document.createTextNode("Matilija Games")
       ]),
       code ? el("button", { class: "btn btn-sm btn-ghost", type: "button", onclick: leave },
@@ -674,6 +686,37 @@ input.word-input {
   }
 
   function homeScreen() {
+    return screen === "setup" ? setupScreen() : gamesScreen();
+  }
+
+  var GAMES = [{
+    id: "wavelength",
+    name: "Wavelength",
+    glyph: "🎯",
+    blurb: "Everyone writes a word. Reveal together. Keep going until you all land on the same one."
+  }];
+
+  function gamesScreen() {
+    return el("div", { class: "wrap" }, [
+      masthead(),
+      el("div", { class: "game-list" }, GAMES.map(function (g) {
+        return el("button", {
+          class: "game-tile", type: "button",
+          onclick: function () { screen = "setup"; render(); }
+        }, [
+          el("div", { class: "glyph", text: g.glyph }),
+          el("div", { class: "meta" }, [
+            el("b", { text: g.name }),
+            el("span", { class: "tiny", text: g.blurb })
+          ])
+        ]);
+      }))
+    ]);
+  }
+
+  function setupScreen() {
+    var game = GAMES[0];
+
     var nameInput = el("input", {
       type: "text", maxlength: "20", placeholder: "Your name", value: me.name,
       "aria-label": "Your name",
@@ -718,21 +761,13 @@ input.word-input {
 
     return el("div", { class: "wrap" }, [
       masthead(),
-      el("div", { class: "hero" }, [
-        el("h1", { text: "Play something together" }),
-        el("p", { class: "lede", text: "Family games for whoever is in the room, on whatever phone they're holding." })
-      ]),
-
-      el("div", { class: "game-list" }, [
-        el("div", { class: "game-tile" }, [
-          el("div", { class: "glyph", text: "🎯" }),
-          el("div", { class: "meta" }, [
-            el("b", { text: "Converge" }),
-            el("span", { class: "tiny", text: "Everyone writes a word. Reveal together. Keep going until you all land on the same one." })
-          ])
+      el("div", { class: "game-tile still" }, [
+        el("div", { class: "glyph", text: game.glyph }),
+        el("div", { class: "meta" }, [
+          el("b", { text: game.name }),
+          el("span", { class: "tiny", text: game.blurb })
         ])
       ]),
-
       el("div", { class: "card" }, [
         el("div", { class: "field" }, [
           el("label", { class: "label", text: "Who are you" }),
@@ -742,14 +777,12 @@ input.word-input {
           [document.createTextNode("Start a new game")]),
         el("hr", { class: "divider" }),
         el("div", { class: "field" }, [
-          el("label", { class: "label", text: "Or join one" }),
+          el("label", { class: "label", text: "Or join game" }),
           codeInput
         ]),
         el("button", { class: "btn btn-block", type: "button", onclick: doJoin },
           [document.createTextNode("Join game")])
-      ]),
-
-      el("p", { class: "tiny", text: "Everyone opens the same code on their own phone." })
+      ])
     ]);
   }
 
@@ -880,7 +913,7 @@ input.word-input {
 
     var input = el("input", {
       type: "text", class: "word-input", maxlength: "40",
-      placeholder: "your word", autocomplete: "off", spellcheck: "false",
+      placeholder: "enter word", autocomplete: "off", spellcheck: "false",
       "aria-label": "Your word",
       oninput: function (e) { draft = e.target.value; },
       onkeydown: function (e) { if (e.key === "Enter") { e.preventDefault(); submit(); } }
@@ -904,7 +937,7 @@ input.word-input {
       : [
           input,
           el("button", { class: "btn btn-primary btn-lg btn-block", type: "button", onclick: submit },
-            [document.createTextNode("Lock it in")])
+            [document.createTextNode("Submit")])
         ];
 
     return el("div", { class: "card" }, [
@@ -912,9 +945,7 @@ input.word-input {
         el("h2", { text: "Round " + team.round }),
         view.teamCount > 1 ? el("span", { class: "label " + teamClass(team.id), text: "Team " + team.id }) : null
       ]),
-      el("p", { class: "tiny", text: team.round === 1
-        ? "Everyone writes any word at all. You're trying to end up on the same one."
-        : "Write the word that bridges the last two. No repeats." }),
+      el("p", { class: "tiny", text: "On the same wavelength?" }),
       el("div", { class: "field" }, body),
       el("hr", { class: "divider" }),
       el("div", { class: "waiting" }, [
@@ -950,7 +981,7 @@ input.word-input {
           el("span", { class: "who", text: w.name })
         ]);
       })),
-      el("p", { class: "verdict no", text: "Not the same word — go again." }),
+      el("p", { class: "verdict no", text: "Keep going…" }),
       el("div", { class: "btn-row" }, [
         el("button", { class: "btn btn-primary", type: "button", onclick: function () { send({ t: "next" }); } },
           [document.createTextNode("Next round")]),
@@ -979,7 +1010,7 @@ input.word-input {
 
   function historyCard(team) {
     return el("div", { class: "card tight" }, [
-      el("span", { class: "label", text: "How we got here" }),
+      el("span", { class: "label", text: "History" }),
       el("div", { class: "history" }, team.history.slice().reverse().map(function (h) {
         return el("div", { class: "round-block" + (h.matched ? " hit" : "") }, [
           el("span", { class: "rnum", text: "Round " + h.round }),
@@ -1045,7 +1076,7 @@ input.word-input {
   render();
   if (/^[A-Z]{4}$/.test(initial)) {
     if (me.name.trim()) connect(initial);
-    else { joinCode = initial; render(); toast("Add your name, then join."); }
+    else { joinCode = initial; screen = "setup"; render(); toast("Add your name, then join."); }
   }
 })();
 </script>

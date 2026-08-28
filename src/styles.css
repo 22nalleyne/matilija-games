@@ -452,3 +452,7 @@ input.word-input {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
+
+/* the same tile, shown as a heading rather than a choice */
+.game-tile.still { cursor: default; }
+.game-tile.still:hover { border-color: var(--rule); transform: none; }
