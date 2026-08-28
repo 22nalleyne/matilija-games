@@ -467,14 +467,6 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    if (ALIASES.indexOf(url.hostname) >= 0) {
-      const to = new URL(url.toString());
-      to.hostname = CANONICAL;
-      to.protocol = "https:";
-      to.port = "";
-      return Response.redirect(to.toString(), 301);
-    }
-
     if (url.pathname === "/api/exists" || url.pathname === "/api/room") {
       const code = String(url.searchParams.get("code") || "").toUpperCase();
       if (!validCode(code)) {
