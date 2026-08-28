@@ -529,8 +529,7 @@
           [document.createTextNode("Next round")]),
         el("button", { class: "btn", type: "button", onclick: function () { send({ t: "gotIt" }); } },
           [document.createTextNode("Close enough — we got it")])
-      ]),
-      el("p", { class: "tiny", text: "Use “we got it” when the words mean the same thing and the computer disagrees." })
+      ])
     ]);
   }
 
