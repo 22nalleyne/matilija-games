@@ -453,6 +453,17 @@ input.word-input {
   *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
 
-/* the expanded tile and its panel read as one block */
-.game-tile.open { border-color: var(--gold); }
-.card.panel { border-top-left-radius: var(--r-md); border-top-right-radius: var(--r-md); }
+/* On the setup screen the same block is a heading, not a choice: no border,
+   no hover, nothing that invites a tap. */
+.game-tile.still {
+  cursor: default;
+  background: transparent;
+  border-color: transparent;
+  padding: 4px 0 0;
+  pointer-events: none;
+}
+.game-tile.still:hover { border-color: transparent; transform: none; }
+.game-tile.still .glyph { background: var(--surface-2); }
+
+/* back out of a game's setup to the list */
+.back { align-self: flex-start; padding-left: 6px; margin-bottom: -6px; }

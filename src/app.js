@@ -25,7 +25,7 @@
   var retry = 0;
   var retryTimer = null;
   var joinCode = "";
-  var openGame = null;   // which game tile is expanded
+  var screen = "games";   // games | setup
 
   var me = {
     id: store(LS_ID) || makeId(),
@@ -175,7 +175,7 @@
 
   function leave() {
     if (ws) { try { ws.onclose = null; ws.close(); } catch (e) {} }
-    ws = null; view = null; code = null; status = "idle"; draft = ""; openGame = null;
+    ws = null; view = null; code = null; status = "idle"; draft = ""; screen = "games";
     clearTimeout(retryTimer);
     location.hash = "";
     render();
@@ -209,7 +209,7 @@
       if (!confirm("Leave the game?")) return;
     }
     if (code) { leave(); return; }
-    openGame = null;
+    screen = "games";
     joinCode = "";
     render();
   }
@@ -227,6 +227,10 @@
     ]);
   }
 
+  function homeScreen() {
+    return screen === "setup" ? setupScreen() : gamesScreen();
+  }
+
   var GAMES = [{
     id: "wavelength",
     name: "Wavelength",
@@ -234,33 +238,27 @@
     blurb: "Everyone writes a word. Reveal together. Keep going until you all land on the same one."
   }];
 
-  // The tile is the control: tap it to open the panel underneath, tap it
-  // again to close. Everything stays on one page so more games can sit in
-  // the same list.
-  function homeScreen() {
-    var list = el("div", { class: "game-list" });
-
-    GAMES.forEach(function (g) {
-      var open = openGame === g.id;
-      list.appendChild(el("button", {
-        class: "game-tile" + (open ? " open" : ""),
-        type: "button",
-        "aria-expanded": open ? "true" : "false",
-        onclick: function () { openGame = open ? null : g.id; render(); }
-      }, [
-        el("div", { class: "glyph", text: g.glyph }),
-        el("div", { class: "meta" }, [
-          el("b", { text: g.name }),
-          el("span", { class: "tiny", text: g.blurb })
-        ])
-      ]));
-      if (open) list.appendChild(setupPanel());
-    });
-
-    return el("div", { class: "wrap" }, [masthead(), list]);
+  function gamesScreen() {
+    return el("div", { class: "wrap" }, [
+      masthead(),
+      el("div", { class: "game-list" }, GAMES.map(function (g) {
+        return el("button", {
+          class: "game-tile", type: "button",
+          onclick: function () { screen = "setup"; render(); }
+        }, [
+          el("div", { class: "glyph", text: g.glyph }),
+          el("div", { class: "meta" }, [
+            el("b", { text: g.name }),
+            el("span", { class: "tiny", text: g.blurb })
+          ])
+        ]);
+      }))
+    ]);
   }
 
-  function setupPanel() {
+  function setupScreen() {
+    var game = GAMES[0];
+
     var nameInput = el("input", {
       type: "text", maxlength: "20", placeholder: "Your name", value: me.name,
       "aria-label": "Your name",
@@ -303,20 +301,34 @@
       connect(candidate);
     }
 
-    return el("div", { class: "card panel" }, [
-      el("div", { class: "field" }, [
-        el("label", { class: "label", text: "Who are you" }),
-        nameInput
+    return el("div", { class: "wrap" }, [
+      masthead(),
+      el("button", {
+        class: "btn btn-sm btn-ghost back", type: "button",
+        onclick: function () { screen = "games"; joinCode = ""; render(); }
+      }, [document.createTextNode("← Games")]),
+      el("div", { class: "game-tile still" }, [
+        el("div", { class: "glyph", text: game.glyph }),
+        el("div", { class: "meta" }, [
+          el("b", { text: game.name }),
+          el("span", { class: "tiny", text: game.blurb })
+        ])
       ]),
-      el("button", { class: "btn btn-primary btn-lg btn-block", type: "button", onclick: doCreate },
-        [document.createTextNode("Start a new game")]),
-      el("hr", { class: "divider" }),
-      el("div", { class: "field" }, [
-        el("label", { class: "label", text: "Or join game" }),
-        codeInput
-      ]),
-      el("button", { class: "btn btn-block", type: "button", onclick: doJoin },
-        [document.createTextNode("Join game")])
+      el("div", { class: "card" }, [
+        el("div", { class: "field" }, [
+          el("label", { class: "label", text: "Who are you" }),
+          nameInput
+        ]),
+        el("button", { class: "btn btn-primary btn-lg btn-block", type: "button", onclick: doCreate },
+          [document.createTextNode("Start a new game")]),
+        el("hr", { class: "divider" }),
+        el("div", { class: "field" }, [
+          el("label", { class: "label", text: "Or join game" }),
+          codeInput
+        ]),
+        el("button", { class: "btn btn-block", type: "button", onclick: doJoin },
+          [document.createTextNode("Join game")])
+      ])
     ]);
   }
 
@@ -609,6 +621,6 @@
   render();
   if (/^[A-Z]{4}$/.test(initial)) {
     if (me.name.trim()) connect(initial);
-    else { joinCode = initial; openGame = "wavelength"; render(); toast("Add your name, then join."); }
+    else { joinCode = initial; screen = "setup"; render(); toast("Add your name, then join."); }
   }
 })();
