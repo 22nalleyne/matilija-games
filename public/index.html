@@ -440,7 +440,9 @@ input.word-input {
   position: fixed;
   left: 50%;
   bottom: 20px;
-  transform: translate(-50%, 150%);
+  transform: translate(-50%, calc(100% + 30px));
+  visibility: hidden;
+  pointer-events: none;
   background: var(--surface-3);
   border: 1px solid var(--rule-2);
   color: var(--ink);
@@ -452,7 +454,7 @@ input.word-input {
   max-width: calc(100vw - 28px);
   transition: transform .22s cubic-bezier(.2,.8,.3,1);
 }
-.toast.show { transform: translate(-50%, 0); }
+.toast.show { transform: translate(-50%, 0); visibility: visible; pointer-events: auto; }
 .toast.bad { border-color: var(--bad); }
 
 .divider { height: 1px; background: var(--rule); border: 0; margin: 2px 0; }
